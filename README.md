@@ -37,10 +37,10 @@ OpenSSH config:
 
     Match Group aclusers
         AuthorizedKeysFile /etc/ssh/empty
-        AuthorizedKeysCommand /usr/local/libexec/sshacl/sshaclsrv /etc/ssh/acl.cfg %u %f
+        AuthorizedKeysCommand /usr/local/libexec/sshacl/sshaclsrv -c /etc/ssh/acl.cfg -u %u -f %f
         AuthorizedKeysCommandUser sshacl
 
-To add to system:
+Create group and capture system users:
 
     $ groupadd aclusers
     $ usermod -a -G aclusers <systemuser to manage>
@@ -51,6 +51,6 @@ Correctly updating the keyfile:
 
 ### Security Note
 
-Be aware that sshacl intentionally does *NOT* check the owner or
+Be aware that sshaclsrv intentionally does *NOT* check the owner or
 permission of the key-file. The security of your system will depend on
 how this file can be modified.
