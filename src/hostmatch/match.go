@@ -69,6 +69,7 @@ func Compile(patternString string) Pattern {
 	return ret
 }
 
+// Match s to the compiled pattern.
 func (p Pattern) Match(s string) bool {
 	ps := []rune(s)
 	for _, m := range p {
