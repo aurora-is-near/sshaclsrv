@@ -11,7 +11,7 @@ fmt:
 	mv tmp.md README.md
 
 test:
-	gocheck -c
+	gocheck -c -e contrib -e dev
 
 test-install:
 	go get github.com/frankbraun/gocheck
