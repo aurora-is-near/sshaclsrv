@@ -1,3 +1,6 @@
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+github.com/davecgh/go-spew/spew
 # golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
 ## explicit; go 1.17
 golang.org/x/crypto/ed25519

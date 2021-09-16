@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/aurora-is-near/sshaclsrv/src/hostmatch"
 
 	"github.com/aurora-is-near/sshaclsrv/src/delegatesign"
 )
@@ -126,21 +127,13 @@ func parseLine(line []byte) *aclEntry {
 	return newEntry(fields)
 }
 
-func modRegex(s string) string {
-	return "^" + strings.Replace(strings.Replace(s, ".", "\\.", -1), "*", "[^.]*", -1) + "$"
-}
-
 func matchLine(line []byte, host, user, key string) (*aclEntry, bool) {
 	e := parseLine(line)
 	if e == nil {
 		return nil, false
 	}
 	if e.Hostname != "*" && e.Hostname != host {
-		x, err := regexp.Compile(modRegex(e.Hostname))
-		if err != nil {
-			return nil, false
-		}
-		if !x.Match([]byte(host)) {
+		if !hostmatch.Compile(e.Hostname).Match(host) {
 			return nil, false
 		}
 	}
