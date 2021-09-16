@@ -1,0 +1,25 @@
+---
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+name: Build
+jobs:
+  validate:
+    runs-on: self-hosted
+    name: Validate
+    steps:
+      - name: Clone the repository
+        uses: actions/checkout@v2
+      - name: Validate
+        run: make validate
+  build:
+    runs-on: self-hosted
+    name: Build
+    steps:
+      - name: Clone the repository
+        uses: actions/checkout@v2
+      - name: Build
+        run: make
