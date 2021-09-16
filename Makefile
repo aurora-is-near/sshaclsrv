@@ -17,3 +17,5 @@ test-install:
 	go get github.com/frankbraun/gocheck
 	go get golang.org/x/tools/cmd/goimports
 	go get golang.org/x/lint/golint
+
+validate:
