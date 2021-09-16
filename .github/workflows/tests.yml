@@ -7,14 +7,6 @@ on:
 
 name: Tests
 jobs:
-  validate:
-    runs-on: self-hosted
-    name: Validate
-    steps:
-      - name: Clone the repository
-        uses: actions/checkout@v2
-      - name: Validate
-        run: make validate
   test:
     runs-on: self-hosted
     name: Test
