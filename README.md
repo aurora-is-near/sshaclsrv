@@ -29,7 +29,7 @@ Returned entries are one key per line. Remote entries require a signature that i
 Delegated signatures allow delegating authority for a limited time to a third party, without having
 to update the on-node configuration of sshaclsrv.
 
-If a remote lookup fails (404 not found) or times out (5 seconds), the local file will be consulted.
+If a remote lookup fails (other than with status 404) or times out (5 seconds), the local file will be consulted.
 
 OpenSSH config:
 
@@ -40,7 +40,7 @@ OpenSSH config:
         AuthorizedKeysCommand /usr/local/libexec/sshacl/sshaclsrv -c /etc/ssh/acl.cfg -u %u -f %f
         AuthorizedKeysCommandUser sshacl
 
-Create group and capture system users:
+Create group and capture system users to be managed:
 
     $ groupadd aclusers
     $ usermod -a -G aclusers <systemuser to manage>
