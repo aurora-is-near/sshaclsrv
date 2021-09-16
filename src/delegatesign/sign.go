@@ -8,8 +8,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"time"
-
-	ed255192 "golang.org/x/crypto/ed25519"
 )
 
 const (
@@ -98,7 +96,7 @@ func (delegatedKey DelegatedKey) Key() (masterPublicKey, subPublicKey ed25519.Pu
 }
 
 // Delegator returns the master public key embedded in the DelegatedKey.
-func (delegatedKey DelegatedKey) Delegator() ed255192.PublicKey {
+func (delegatedKey DelegatedKey) Delegator() ed25519.PublicKey {
 	if len(delegatedKey) != DelegatedKeyLength {
 		return make([]byte, ed25519.PublicKeySize)
 	}
