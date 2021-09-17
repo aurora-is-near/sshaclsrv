@@ -15,8 +15,8 @@ import (
 var (
 	// ErrNotFound is returned if no matching entry could be found.
 	ErrNotFound = errors.New("not found")
-	// ErrInvalidExpire is returned if parsing expiry time fails.
-	ErrInvalidExpire = errors.New("invalid expire format")
+	// // ErrInvalidExpire is returned if parsing expiry time fails.
+	// ErrInvalidExpire = errors.New("invalid expire format")
 )
 
 // AuthorizedFile is a file containing authorization information.
@@ -41,23 +41,23 @@ func (kf *AuthorizedFile) Close() {
 
 // FindEntry finds valid entries in the file that match user and key (its sha256 fingerprint).
 // It returns the authorized-keys entries that match.
-func (kf *AuthorizedFile) FindEntry(w io.Writer, user, key string) error {
-	return FindEntry((*os.File)(kf), w, user, key)
+func (kf *AuthorizedFile) FindEntry(w io.Writer, hostname, user, key string) error {
+	return FindEntry((*os.File)(kf), w, hostname, user, key)
 }
 
 // FindEntryFromFile searches a file for matching keys and writes them to w.
-func FindEntryFromFile(filename string, w io.Writer, user, key string) error {
+func FindEntryFromFile(filename string, w io.Writer, hostname, user, key string) error {
 	kf, err := New(filename)
 	if err != nil {
 		return err
 	}
 	defer kf.Close()
-	return kf.FindEntry(w, user, key)
+	return kf.FindEntry(w, hostname, user, key)
 }
 
 // FindEntry searches r for matching keys and writes them to w.
-func FindEntry(r io.Reader, w io.Writer, user, key string) error {
-	e, err := findEntry(r, user, key)
+func FindEntry(r io.Reader, w io.Writer, hostname, user, key string) error {
+	e, err := findEntry(r, hostname, user, key)
 	if len(e) == 0 {
 		return err
 	}

@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 	"unicode"
@@ -28,14 +27,6 @@ const (
 var (
 	killTime, _ = time.Parse(expireTimeFormat, "19110103000000")
 )
-
-// Testing instrumentation.
-func hostname() (string, error) {
-	return os.Hostname()
-}
-
-// Testing instrumentation.
-var hostnamefunc = hostname
 
 type aclEntry struct {
 	Hostname      string
@@ -157,18 +148,14 @@ func splitKey(key string) string {
 	return f[1]
 }
 
-func findEntry(r io.Reader, user, key string) ([]*aclEntry, error) {
+func findEntry(r io.Reader, hostname, user, key string) ([]*aclEntry, error) {
 	var line []byte
 	var err error
 	var ret []*aclEntry
-	host, err := hostnamefunc()
-	if err != nil {
-		return nil, ErrNotFound
-	}
 	b := bufio.NewReader(r)
 	for {
 		line, err = b.ReadBytes(lineDelim)
-		if e, ok := matchLine(line, host, user, splitKey(key)); ok && e != nil {
+		if e, ok := matchLine(line, hostname, user, splitKey(key)); ok && e != nil {
 			ret = append(ret, e)
 		}
 		if err != nil {
