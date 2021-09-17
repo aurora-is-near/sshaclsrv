@@ -18,6 +18,7 @@ type Settings struct {
 	Token     string
 	PublicKey ed25519.PublicKey
 	KeyFile   string
+	Hostname  string
 }
 
 var config = &Settings{
@@ -25,6 +26,7 @@ var config = &Settings{
 	Token:     "password for httpauth",
 	PublicKey: func() ed25519.PublicKey { p, _, _ := ed25519.GenerateKey(rand.Reader); return p }(),
 	KeyFile:   "/etc/ssh/sshacl.keys",
+	Hostname:  "",
 }
 
 var (
@@ -65,8 +67,17 @@ func main() {
 		_, _ = fmt.Fprintf(os.Stderr, "error reading configfile: %s\n", err)
 		os.Exit(1)
 	}
+	if config.Hostname == "" {
+		var hostname string
+		var err error
+		if hostname, err = os.Hostname(); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "cannot determine hostname: %s\n", err)
+			os.Exit(1)
+		}
+		config.Hostname = hostname
+	}
 	if config.URL != "" && len(config.PublicKey) >= ed25519.PublicKeySize {
-		remote := gosshacl.NewRemote(config.URL, config.PublicKey, config.Token)
+		remote := gosshacl.NewRemote(config.URL, config.PublicKey, config.Token, config.Hostname)
 		err := remote.FindEntry(os.Stdout, username, fingerprint)
 		switch err {
 		case nil, gosshacl.ErrNotFound:
@@ -77,7 +88,7 @@ func main() {
 			os.Exit(2)
 		}
 	}
-	if err := gosshacl.FindEntryFromFile(config.KeyFile, os.Stdout, username, fingerprint); err != nil {
+	if err := gosshacl.FindEntryFromFile(config.KeyFile, os.Stdout, config.Hostname, username, fingerprint); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}

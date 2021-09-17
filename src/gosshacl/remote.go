@@ -30,11 +30,12 @@ type RemoteACL struct {
 	URL       string            // https://<url>/keyFP/hostname/user/
 	PublicKey ed25519.PublicKey // Master Publickey.
 	Token     string            // http-basic auth password, hostname is user.
+	Hostname  string            // Server's hostname.
 }
 
 // NewRemote returns a new RemoteACL that uses the given url. If token is not empty it will
 // be used as username in BasicAuth (password default). The public key will be used to verify the entry signatures.
-func NewRemote(url string, publicKey ed25519.PublicKey, token string) *RemoteACL {
+func NewRemote(url string, publicKey ed25519.PublicKey, token, hostname string) *RemoteACL {
 	if url[len(url)-1] == '/' {
 		url = url[:len(url)-1]
 	}
@@ -42,6 +43,7 @@ func NewRemote(url string, publicKey ed25519.PublicKey, token string) *RemoteACL
 		PublicKey: publicKey,
 		Token:     token,
 		URL:       url,
+		Hostname:  hostname,
 	}
 }
 
@@ -95,16 +97,12 @@ func getURL(c *http.Client, url, hostname, token string) (*http.Response, error)
 
 // FindEntry calls the remote backend to find matching keys and writes them to w.
 func (remote *RemoteACL) FindEntry(w io.Writer, username, fingerprint string) error {
-	hostname, err := hostnamefunc()
+	url := strings.Join([]string{remote.URL, keyEndpoint, fingerprint, remote.Hostname, username}, "/")
+	resp, err := getURL(httpclient(0), url, remote.Hostname, remote.Token)
 	if err != nil {
 		return err
 	}
-	url := strings.Join([]string{remote.URL, keyEndpoint, fingerprint, hostname, username}, "/")
-	resp, err := getURL(httpclient(0), url, hostname, remote.Token)
-	if err != nil {
-		return err
-	}
-	return remote.parseResponse(w, resp.Body, hostname, username, fingerprint)
+	return remote.parseResponse(w, resp.Body, username, fingerprint)
 }
 
 func splitLine(line []byte) (sig, msg []byte) {
@@ -124,7 +122,7 @@ func (remote *RemoteACL) verifyLine(sig, msg []byte) bool {
 	return ok
 }
 
-func (remote *RemoteACL) parseResponse(w io.Writer, r io.Reader, host, user, fingerprint string) error {
+func (remote *RemoteACL) parseResponse(w io.Writer, r io.Reader, user, fingerprint string) error {
 	var found bool
 	buf := bufio.NewReader(r)
 	for {
@@ -137,7 +135,7 @@ func (remote *RemoteACL) parseResponse(w io.Writer, r io.Reader, host, user, fin
 			if !remote.verifyLine(sig, msg) {
 				continue
 			}
-			if e, ok := matchLine(msg, host, user, fingerprint); !ok {
+			if e, ok := matchLine(msg, remote.Hostname, user, fingerprint); !ok {
 				continue
 			} else {
 				found = true

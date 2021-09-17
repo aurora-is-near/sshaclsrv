@@ -14,12 +14,7 @@ var (
 	ok   = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJcOEAu5+f9pPqRM6rZWbWUsh/uV8lWpXjYSwy1QrvtuyyJTYtVJkVxl+Kry0UC/SaqYayt9jnEXaBEZLXLeS2w="
 )
 
-func hostnameTest() (string, error) {
-	return "localhost", nil
-}
-
 func TestEntry(t *testing.T) {
-	hostnamefunc = hostnameTest
 	e := &aclEntry{
 		Hostname:      "localhost",
 		User:          "root",
@@ -33,11 +28,10 @@ func TestEntry(t *testing.T) {
 }
 
 func TestFindEntryHash(t *testing.T) {
-	hostnamefunc = hostnameTest
 	b := new(bytes.Buffer)
 	w := new(bytes.Buffer)
 	b.WriteString(te + "\n" + te)
-	if err := FindEntry(b, w, "root", string(tkh)); err != nil {
+	if err := FindEntry(b, w, "localhost", "root", string(tkh)); err != nil {
 		t.Fatalf("FindEntry: %s", err)
 	}
 }

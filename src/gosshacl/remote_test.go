@@ -17,7 +17,6 @@ func TestRemoteParse(t *testing.T) {
 	masterPub, masterPriv, _ := ed25519.GenerateKey(rand.Reader)
 	subPub, subPriv, _ := ed25519.GenerateKey(rand.Reader)
 	delkey := delegatesign.DelegateKey(masterPriv, subPub, time.Now().Add(time.Minute))
-	hostnamefunc = hostnameTest
 	e := &aclEntry{
 		Hostname:      "localhost",
 		User:          "root",
@@ -28,9 +27,9 @@ func TestRemoteParse(t *testing.T) {
 	entry := e.Sign(delkey, subPriv)
 	buf := new(bytes.Buffer)
 	buf.Write([]byte(entry))
-	remote := NewRemote("https://127.0.0.1:9100", masterPub, "")
+	remote := NewRemote("https://127.0.0.1:9100", masterPub, "", "localhost")
 	w := new(bytes.Buffer)
-	if err := remote.parseResponse(w, buf, "localhost", "root", tkhc); err != nil {
+	if err := remote.parseResponse(w, buf, "root", tkhc); err != nil {
 		t.Errorf("parseResponse: %s", err)
 	}
 	if strings.TrimSpace(w.String()) != ok {
@@ -50,7 +49,6 @@ func TestRemote(t *testing.T) {
 	masterPub, masterPriv, _ := ed25519.GenerateKey(rand.Reader)
 	subPub, subPriv, _ := ed25519.GenerateKey(rand.Reader)
 	delkey := delegatesign.DelegateKey(masterPriv, subPub, time.Now().Add(time.Minute))
-	hostnamefunc = hostnameTest
 	e := &aclEntry{
 		Hostname:      "localhost",
 		User:          "root",
@@ -77,7 +75,7 @@ func TestRemote(t *testing.T) {
 		}
 	}()
 	time.Sleep(time.Second / 2)
-	remote := NewRemote("http://127.0.0.1:9100", masterPub, "")
+	remote := NewRemote("http://127.0.0.1:9100", masterPub, "", "localhost")
 	w := new(bytes.Buffer)
 	if err := remote.FindEntry(w, "root", tkhc); err != nil {
 		t.Fatalf("FindEntry: %s", err)
