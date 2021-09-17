@@ -25,7 +25,7 @@ var (
 type RemoteACL struct {
 	URL       string            // https://<url>/keyFP/hostname/user/
 	PublicKey ed25519.PublicKey // Master Publickey.
-	Token     string            // http-basic auth user
+	Token     string            // http-basic auth password, hostname is user.
 }
 
 // NewRemote returns a new RemoteACL that uses the given url. If token is not empty it will
@@ -70,14 +70,14 @@ func httpclient(timeout time.Duration) *http.Client {
 	}
 }
 
-func getURL(c *http.Client, url, token string) (*http.Response, error) {
+func getURL(c *http.Client, url, hostname, token string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, ErrFallback
 	}
 	req.Close = true
 	if len(token) > 0 {
-		req.SetBasicAuth(token, "default")
+		req.SetBasicAuth(hostname, token)
 	}
 	resp, err := c.Do(req)
 	if err != nil {
@@ -96,7 +96,7 @@ func (remote *RemoteACL) FindEntry(w io.Writer, username, fingerprint string) er
 		return err
 	}
 	url := strings.Join([]string{remote.URL, fingerprint, hostname, username}, "/")
-	resp, err := getURL(httpclient(0), url, remote.Token)
+	resp, err := getURL(httpclient(0), url, hostname, remote.Token)
 	if err != nil {
 		return err
 	}

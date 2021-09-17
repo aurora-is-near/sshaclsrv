@@ -12,7 +12,7 @@ carry an expiration time.
 sshaclsrv is used as AuthorizedKeysCommand and parses a keyfile
 containing:
 
--   Hostname on which the key is valid (can contain \* for matching).
+-   Hostname on which the key is valid (can contain '\*' for matching).
 -   SystemUser as which to authenticate.
 -   The SHA256 hash of the user/node that is connecting.
 -   ExpireTime, optional. YYYYMMDDHHmmSS.
@@ -31,6 +31,8 @@ to update the on-node configuration of sshaclsrv.
 
 If a remote lookup fails (other than with status 404) or times out (5
 seconds), the local file will be consulted.
+
+Calls to HTTP backend support optional authentication (via Basic Auth only to support dumb fileserving).
 
 OpenSSH config:
 

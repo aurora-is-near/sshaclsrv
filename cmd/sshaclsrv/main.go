@@ -22,7 +22,7 @@ type Settings struct {
 
 var config = &Settings{
 	URL:       "https://127.0.0.1:9100",
-	Token:     "tokenusername",
+	Token:     "password for httpauth",
 	PublicKey: func() ed25519.PublicKey { p, _, _ := ed25519.GenerateKey(rand.Reader); return p }(),
 	KeyFile:   "/etc/ssh/sshacl.keys",
 }
