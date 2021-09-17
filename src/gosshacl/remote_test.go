@@ -62,7 +62,7 @@ func TestRemote(t *testing.T) {
 	server := &http.Server{
 		Addr: "127.0.0.1:9100",
 		Handler: &handler{f: func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.String() != "/RFqtJf2QzWNTc1nh8A1q7giSaFoZSurk5q5uZp91MPM/localhost/root" {
+			if r.URL.String() != "/key/RFqtJf2QzWNTc1nh8A1q7giSaFoZSurk5q5uZp91MPM/localhost/root" {
 				t.Error("Wrong URL")
 			}
 			_, _ = w.Write([]byte(entry))

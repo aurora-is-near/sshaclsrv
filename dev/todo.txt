@@ -1,0 +1,10 @@
+- [x] Modify URL construction to define endpoint.
+- [ ] Single place of hostname discovery, overwrite by config file.
+- [ ] Fetch full file.
+- [ ] Verify that keyfile is only root/sshacl writeable.
+    https://pirivan.gitlab.io/post/how-to-retrieve-file-ownership-information-in-golang/
+    if s, ok := keyfile.Sys().(*syscall.Stat_t); ok {
+    UID = int(s.Uid)
+    GID = int(s.Gid)
+- [ ] Standalone signer bin (gen keypair, create delegation)
+- [ ] Policy creation to filesystem hierarchy.

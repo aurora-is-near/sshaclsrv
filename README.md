@@ -22,7 +22,7 @@ containing:
 Remote key repositories are standard HTTP file servers, using the URL to
 match the keys. Urls have the format:
 
-`http(s)://fqdn/path/sshfingerprint/hostname/systemuser`
+`http(s)://<fqdn/path>/key/<sshfingerprint>/<hostname>/<systemuser>`
 
 Returned entries are one key per line. Remote entries require a
 signature that is created by delegatesign. Delegated signatures allow
