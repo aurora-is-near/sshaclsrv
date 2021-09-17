@@ -32,7 +32,8 @@ to update the on-node configuration of sshaclsrv.
 If a remote lookup fails (other than with status 404) or times out (5
 seconds), the local file will be consulted.
 
-Calls to HTTP backend support optional authentication (via Basic Auth only to support dumb fileserving).
+Calls to HTTP backend support optional authentication (via Basic Auth
+only to support dumb fileserving).
 
 OpenSSH config:
 
@@ -52,4 +53,5 @@ Correctly updating the keyfile:
 
     $ mv new-keyfile keyfile 
 
-Please be aware that both the sshaclsrv config file and key file may only be writeable by root or the process owner.
+Please be aware that both the sshaclsrv config file and key file may
+only be writeable by root or the process owner.

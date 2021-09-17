@@ -10,9 +10,12 @@ import (
 )
 
 var (
+	// ErrWriteable is returned for files that are writeable by somebody other than root and process owner.
 	ErrWriteable = errors.New("other than user can write")
+	// ErrIrregular is returned for files that are not regular files, including symlinks.
 	ErrIrregular = errors.New("not a regular file")
-	ErrOwner     = errors.New("not owned by root or process")
+	// ErrOwner is returned for files that are owned by anybody but root or process owner.
+	ErrOwner = errors.New("not owned by root or process")
 )
 
 func modeCheck(mode fs.FileMode) error {
@@ -30,7 +33,7 @@ func modeCheck(mode fs.FileMode) error {
 }
 
 func linkCheck(filename string) error {
-	if s, err := os.Readlink(filename); err == nil && len(s) == 0 {
+	if s, err := os.Readlink(filename); err != nil && len(s) == 0 {
 		return nil
 	}
 	return ErrIrregular
