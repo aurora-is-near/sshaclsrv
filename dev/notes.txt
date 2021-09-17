@@ -20,9 +20,15 @@ DO NOT INCLUDE EXPIRY-TIME in key
 
 Fetch new config on demand and cron. Verify Signature.
 
-HTTP Fetch:
-GET: https://<url>/keyFP/hostname/user/
+HTTP Fetch Key:
+GET: https://<url>/key/keyFP/hostname/user/
 Response:
 Error: Check local
 No data: 404 not found    // Do NOT check local
 Data:   DelegatedSig:ACL Entry
+
+HTTP Fetch:
+GET: https://<url>/host/hostname
+Response:
+Error: nothing
+Data: DelegatedSig:ACL Entry\n...

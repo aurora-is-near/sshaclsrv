@@ -21,6 +21,10 @@ var (
 	ErrFallback = errors.New("fallback")
 )
 
+const (
+	keyEndpoint = "key"
+)
+
 // RemoteACL calls a remote HTTP(s) server to find keys.
 type RemoteACL struct {
 	URL       string            // https://<url>/keyFP/hostname/user/
@@ -95,7 +99,7 @@ func (remote *RemoteACL) FindEntry(w io.Writer, username, fingerprint string) er
 	if err != nil {
 		return err
 	}
-	url := strings.Join([]string{remote.URL, fingerprint, hostname, username}, "/")
+	url := strings.Join([]string{remote.URL, keyEndpoint, fingerprint, hostname, username}, "/")
 	resp, err := getURL(httpclient(0), url, hostname, remote.Token)
 	if err != nil {
 		return err
