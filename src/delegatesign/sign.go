@@ -77,22 +77,35 @@ func isZeroSlice(d []byte) bool {
 
 // Key returns the embedded keys in a DelegatedKey while verifying that signature and notAfter are valid
 func (delegatedKey DelegatedKey) Key() (masterPublicKey, subPublicKey ed25519.PublicKey, err error) {
+	masterPublicKey, subPublicKey, _, err = delegatedKey.Contents()
+	return masterPublicKey, subPublicKey, err
+}
+
+// Contents returns the embedded contents of the key.
+func (delegatedKey DelegatedKey) Contents() (masterPublicKey, subPublicKey ed25519.PublicKey, until time.Time, err error) {
+	until, err = delegatedKey.Until()
+	masterPublicKey = ed25519.PublicKey(delegatedKey[masterKeyStart:masterKeyEnd])
+	if !ed25519.Verify(masterPublicKey, delegatedKey[delegatedKeyHeaderStart:delegatedKeyHeaderEnd], delegatedKey[signatureStart:signatureEnd]) {
+		return nil, nil, until, ErrSignature
+	}
+	subPublicKey = ed25519.PublicKey(delegatedKey[subKeyStart:subKeyEnd])
+	return masterPublicKey, subPublicKey, until, err
+}
+
+// Until returns the time until which the delegation is valid. Does NOT verify the delegation.
+func (delegatedKey DelegatedKey) Until() (time.Time, error) {
 	if len(delegatedKey) != DelegatedKeyLength {
-		return nil, nil, ErrFormat
+		return time.Time{}, ErrFormat
 	}
 	if !isZeroSlice(delegatedKey[notAfterStart:notAfterEnd]) {
 		notAfterBin := int64(byteOrder.Uint64(delegatedKey[notAfterStart:notAfterEnd]))
 		notAfter := time.Unix(notAfterBin, 0)
 		if !notAfter.IsZero() && notAfter.Before(time.Now()) {
-			return nil, nil, ErrExpired
+			return time.Time{}, ErrExpired
 		}
+		return notAfter, nil
 	}
-	masterPublicKey = ed25519.PublicKey(delegatedKey[masterKeyStart:masterKeyEnd])
-	if !ed25519.Verify(masterPublicKey, delegatedKey[delegatedKeyHeaderStart:delegatedKeyHeaderEnd], delegatedKey[signatureStart:signatureEnd]) {
-		return nil, nil, ErrSignature
-	}
-	subPublicKey = ed25519.PublicKey(delegatedKey[subKeyStart:subKeyEnd])
-	return masterPublicKey, subPublicKey, nil
+	return time.Time{}, nil
 }
 
 // Delegator returns the master public key embedded in the DelegatedKey.
