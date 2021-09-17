@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
+
+	"github.com/aurora-is-near/sshaclsrv/src/fileperm"
 
 	"github.com/aurora-is-near/sshaclsrv/src/gosshacl"
 )
@@ -37,7 +39,15 @@ var (
 )
 
 func readConfig(filename string) error {
-	d, err := ioutil.ReadFile(filename)
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	if err := fileperm.PermissionCheck(f); err != nil {
+		return err
+	}
+	d, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
