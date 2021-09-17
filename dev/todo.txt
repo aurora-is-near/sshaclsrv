@@ -1,8 +1,10 @@
 - [x] Modify URL construction to define endpoint.
 - [x] Single place of hostname discovery, overwrite by config file.
 - [x] Verify that keyfile is only root/sshacl writeable.
-- [ ] Standalone signer bin (gen keypair, create delegation)
+- [x] Standalone signer bin (gen keypair, create delegation)
+
+- [ ] Policy creation to filesystem hierarchy.
+- [ ] Policy server casbin
 - [ ] Keyfile update mode
     - [ ] Fetch full file and store filtered.
     - [ ] Sane replace.
-- [ ] Policy creation to filesystem hierarchy.
