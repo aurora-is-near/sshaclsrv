@@ -52,8 +52,4 @@ Correctly updating the keyfile:
 
     $ mv new-keyfile keyfile 
 
-### Security Note
-
-Be aware that sshaclsrv intentionally does *NOT* check the owner or
-permission of the key-file. The security of your system will depend on
-how this file can be modified.
+Please be aware that both the sshaclsrv config file and key file may only be writeable by root or the process owner.

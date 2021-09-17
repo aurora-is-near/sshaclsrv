@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/aurora-is-near/sshaclsrv/src/fileperm"
 )
 
 var (
@@ -30,6 +32,9 @@ func New(filename string) (*AuthorizedFile, error) {
 		if f, err = os.Open(filename + rolloverExtension); err != nil {
 			return nil, err
 		}
+	}
+	if err := fileperm.PermissionCheck(f); err != nil {
+		return nil, err
 	}
 	return (*AuthorizedFile)(f), nil
 }
