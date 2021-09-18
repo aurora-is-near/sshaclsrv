@@ -17,10 +17,10 @@ import (
 // Settings contain global settings for the program.
 type Settings struct {
 	URL       string
-	Token     string
+	Token     string `json:",omitempty"`
 	PublicKey ed25519.PublicKey
 	KeyFile   string
-	Hostname  string
+	Hostname  string `json:",omitempty"`
 }
 
 var config = &Settings{
