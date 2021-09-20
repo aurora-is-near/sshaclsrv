@@ -2,7 +2,6 @@
 - [x] Single place of hostname discovery, overwrite by config file.
 - [x] Verify that keyfile is only root/sshacl writeable.
 - [x] Standalone signer bin (gen keypair, create delegation)
-
 - [ ] Policy creation to filesystem hierarchy.
 - [ ] Policy server casbin
 - [ ] Keyfile update mode
