@@ -4,11 +4,33 @@ Person -> []{
 }
 Person:SSH Key (only option allowed expiretime)
 
-Role -> {
+Action -> {
     SystemUser
     AuthorizedOptions
     ExpireTime
+    Push: // If included in master file
 }
+
+ServerName -> {
+    roles...
+}
+
+Role {
+    ServerDesc: Action....
+}
+
+Person: Key(expire),key(expire)...
+
+Person: Role
+
+->
+
+Push : Person : ServerDesc : SystemUser : Expire : AuhtorizedOptions
+
+Push : Key : ServerDesc : SystemUser : Expire(combined) : AuhtorizedOptions
+
+
+
 Role:SystemUser:ExpireTime:AuthorizedOptions
 
 Person -> Role(ServerMatch)
