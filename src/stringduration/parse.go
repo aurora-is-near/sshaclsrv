@@ -1,3 +1,4 @@
+// Package stringduration extends formatting for durations as strings.
 package stringduration
 
 import (
