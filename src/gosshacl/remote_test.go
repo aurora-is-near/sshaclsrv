@@ -29,7 +29,7 @@ func TestRemoteParse(t *testing.T) {
 	buf.Write([]byte(entry))
 	remote := NewRemote("https://127.0.0.1:9100", masterPub, "", "localhost")
 	w := new(bytes.Buffer)
-	if err := remote.parseResponse(w, buf, "root", tkhc); err != nil {
+	if err := remote.parseResponse(w, buf, "root", tkhc, false); err != nil {
 		t.Errorf("parseResponse: %s", err)
 	}
 	if strings.TrimSpace(w.String()) != ok {
