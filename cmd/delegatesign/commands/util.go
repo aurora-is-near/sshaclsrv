@@ -1,10 +1,7 @@
 package commands
 
 import (
-	"bufio"
-	"encoding/base32"
 	"fmt"
-	"io"
 	"os"
 	"os/user"
 	"time"
@@ -49,34 +46,4 @@ func WriteFile(filename, format string, i ...interface{}) error {
 		return err
 	}
 	return nil
-}
-
-// ReadFile reads contents from filename, skipping comments and decoding remaining lines with base32.
-func ReadFile(filename string) (lines [][]byte, err error) {
-	ret := make([][]byte, 0, 3)
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = f.Close() }()
-	buf := bufio.NewReader(f)
-	for {
-		l, err := buf.ReadString('\n')
-		if len(l) > 0 {
-			if l[0] == '#' {
-				continue
-			}
-			lB, err := base32.StdEncoding.DecodeString(l)
-			if err != nil {
-				return nil, fmt.Errorf("cannot decode %s: %s", filename, err)
-			}
-			ret = append(ret, lB)
-		}
-		if err == io.EOF {
-			return ret, nil
-		}
-		if err != nil {
-			return nil, fmt.Errorf("cannot read %s: %s", filename, err)
-		}
-	}
 }

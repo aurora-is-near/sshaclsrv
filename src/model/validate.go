@@ -2,13 +2,31 @@ package model
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/aurora-is-near/sshaclsrv/src/sshkey"
 
 	"github.com/aurora-is-near/sshaclsrv/src/hostmatch"
 )
 
+func validServerName(server ServerName) bool {
+	return !strings.ContainsAny(string(server), "/\\:")
+}
+
+func validUserName(user UserName) bool {
+	return !strings.ContainsAny(string(user), "/\\:")
+}
+
+func validSystemUserName(user SystemUserName) bool {
+	return !strings.ContainsAny(string(user), "/\\:")
+}
+
 func (acl *SystemACL) validate() error {
-	systemusers := make(map[string]bool)
+	systemusers := make(map[SystemUserName]bool)
 	for server, actions := range acl.Servers {
+		if !validServerName(server) {
+			return fmt.Errorf("server '%s' contains illegal characters", server)
+		}
 		actions.servername = server
 		for _, action := range actions.Actions {
 			if _, ok := acl.Actions[action]; !ok {
@@ -17,7 +35,14 @@ func (acl *SystemACL) validate() error {
 		}
 	}
 	for name, action := range acl.Actions {
+		var err error
 		action.name = name
+		if !validSystemUserName(action.User) {
+			return fmt.Errorf("action '%s' contains systemuser '%s' with illegal characters", action.name, action.User)
+		}
+		if action.sshoptions, err = sshkey.ParseOptions(action.Options); err != nil {
+			return fmt.Errorf("Action '%s' contains invalid options '%s'. %s", action.name, action.Options, err)
+		}
 		if _, ok := systemusers[action.User]; ok {
 			return fmt.Errorf("action '%s' contains duplicate systemuser '%s'", name, action.User)
 		}
@@ -25,6 +50,9 @@ func (acl *SystemACL) validate() error {
 	}
 	for name, user := range acl.Users {
 		user.name = name
+		if !validUserName(name) {
+			return fmt.Errorf("username '%s' contains illegal characters", name)
+		}
 		for _, role := range user.Roles {
 			if _, ok := acl.Roles[role]; !ok {
 				return fmt.Errorf("user '%s' references unknown role '%s'", name, role)

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/aurora-is-near/sshaclsrv/src/util"
+
 	"github.com/aurora-is-near/sshaclsrv/src/delegatesign"
 )
 
@@ -16,7 +18,7 @@ func PublicKey(params ...string) {
 	if len(params) != 1 {
 		Error("Missing parameter: keyfile.\n\nAsk for help.\n\n")
 	}
-	l, err := ReadFile(params[0])
+	l, err := util.ReadFile(params[0])
 	if err != nil {
 		Error("Cannot read key %s: %s\n", params[0], err)
 	}

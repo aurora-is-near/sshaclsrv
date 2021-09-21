@@ -2,13 +2,12 @@ package commands
 
 import (
 	"bytes"
-	"crypto/ed25519"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
 
-	"github.com/aurora-is-near/sshaclsrv/src/delegatesign"
+	"github.com/aurora-is-near/sshaclsrv/src/util"
 )
 
 func signParseParams(params ...string) (io.Reader, string, bool) {
@@ -27,18 +26,9 @@ func signParseParams(params ...string) (io.Reader, string, bool) {
 // Params: <delegationfile> [message]
 func Sign(params ...string) {
 	input, privkeyFile, includeMessage := signParseParams(params...)
-	l, err := ReadFile(privkeyFile)
-	if err != nil || len(l) != 2 {
-		Error("Cannot read delegated private key %s: %s\n", privkeyFile, err)
-	}
-	privkey := ed25519.PrivateKey(l[0])
-	delKey := delegatesign.DelegatedKey(l[1])
-	_, pub, _, err := delKey.Contents()
+	privkey, delKey, err := util.GetKey(privkeyFile)
 	if err != nil {
-		Error("Cannot read delegated private key %s: %s\n", privkeyFile, err)
-	}
-	if !bytes.Equal(pub, privkey.Public().(ed25519.PublicKey)) {
-		Error("Cannot read delegated private key %s: Corrupted\n", privkeyFile)
+		Error("%s", err)
 	}
 	msg, err := io.ReadAll(input)
 	if err != nil {
