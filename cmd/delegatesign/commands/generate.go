@@ -7,6 +7,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+
+	"github.com/aurora-is-near/sshaclsrv/src/util"
 )
 
 // Generate a key.
@@ -23,7 +25,7 @@ func Generate(params ...string) {
 	}
 	pub := base64.StdEncoding.EncodeToString(publicKey)
 	pks := base32.StdEncoding.EncodeToString(privateKey)
-	if err := WriteFile(params[0], "# Private Key %s\n%s\n", identity(), pks); err != nil {
+	if err := util.WriteFile(params[0], "# Private Key %s\n%s\n", identity(), pks); err != nil {
 		Error("Cannot write key to file %s: %s\n", params[0], err)
 	}
 	Output("# Public key\n%s\n", pub)

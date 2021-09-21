@@ -34,16 +34,3 @@ func Output(format string, i ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, format, i...)
 	os.Exit(0)
 }
-
-// WriteFile writes i... to filename using format. Files are readonly and will not overwrite.
-func WriteFile(filename, format string, i ...interface{}) error {
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0400)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-	if _, err := fmt.Fprintf(f, format, i...); err != nil {
-		return err
-	}
-	return nil
-}

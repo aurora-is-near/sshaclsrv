@@ -45,7 +45,7 @@ func Delegate(params ...string) {
 	until := time.Now().Add(dur)
 	dk := delegatesign.DelegateKey(ed25519.PrivateKey(l[0]), publicKey, until)
 	dks := base32.StdEncoding.EncodeToString(dk)
-	if err := WriteFile(delegateKeyFile, "# Delegated Key until %s\n%s\n%s\n", formatTime(until), pks, dks); err != nil {
+	if err := util.WriteFile(delegateKeyFile, "# Delegated Key until %s\n%s\n%s\n", formatTime(until), pks, dks); err != nil {
 		Error("Cannot write key to file %s: %s\n", delegateKeyFile, err)
 	}
 	Output("# Public key\n%s\n", base32.StdEncoding.EncodeToString(publicKey))

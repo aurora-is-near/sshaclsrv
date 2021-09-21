@@ -100,7 +100,17 @@ func (remote *RemoteACL) FindEntry(w io.Writer, username, fingerprint string) er
 	if err != nil {
 		return err
 	}
-	return remote.parseResponse(w, resp.Body, username, fingerprint)
+	return remote.parseResponse(w, resp.Body, username, fingerprint, false)
+}
+
+// Fetch calls the remote backend to find keys for the host and writes them to w.
+func (remote *RemoteACL) Fetch(w io.Writer) error {
+	url := strings.Join([]string{remote.URL, constants.PerHostPath, remote.Hostname}, "/")
+	resp, err := getURL(httpclient(0), url, remote.Hostname, remote.Token)
+	if err != nil {
+		return err
+	}
+	return remote.parseResponse(w, resp.Body, "", "", true)
 }
 
 func splitLine(line []byte) (sig, msg []byte) {
@@ -120,7 +130,7 @@ func (remote *RemoteACL) verifyLine(sig, msg []byte) bool {
 	return ok
 }
 
-func (remote *RemoteACL) parseResponse(w io.Writer, r io.Reader, user, fingerprint string) error {
+func (remote *RemoteACL) parseResponse(w io.Writer, r io.Reader, user, fingerprint string, dontMatch bool) error {
 	var found bool
 	buf := bufio.NewReader(r)
 	for {
@@ -133,11 +143,17 @@ func (remote *RemoteACL) parseResponse(w io.Writer, r io.Reader, user, fingerpri
 			if !remote.verifyLine(sig, msg) {
 				continue
 			}
-			if e, ok := matchLine(msg, remote.Hostname, user, fingerprint); !ok {
-				continue
+			if !dontMatch {
+				if e, ok := matchLine(msg, remote.Hostname, user, fingerprint); !ok {
+					continue
+				} else {
+					found = true
+					_, _ = fmt.Fprintln(w, e.AuthorizedKey)
+				}
 			} else {
 				found = true
-				_, _ = fmt.Fprintln(w, e.AuthorizedKey)
+				_, _ = w.Write(msg)
+				// _, _ = w.Write([]byte("\n"))
 			}
 		}
 		if err == io.EOF {
