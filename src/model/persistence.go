@@ -204,7 +204,8 @@ func (persistence *Persistence) genLines(rows CompiledRows) ([]string, fileData,
 				if tl[0].Before(time.Now()) {
 					continue SingleKeyLoop
 				}
-				f := []string{string(accessRow.Server), string(accessRow.SystemUser), key.Fingerprint, sshkey.ExpireTimeToString(tl[0]), key.ApplyToString(accessRow.sshoptions)}
+				sshkeyS := key.ApplyToString(accessRow.sshoptions)
+				f := []string{string(accessRow.Server), string(accessRow.SystemUser), key.Fingerprint, sshkey.ExpireTimeToString(tl[0]), sshkeyS}
 				preLine := strings.Join(f, ":")
 				sig := persistence.delegatedKey.Sign(persistence.privateKey, []byte(preLine))
 				signedLine := fmt.Sprintf("%s:%s", base64.StdEncoding.EncodeToString(sig), preLine)
@@ -234,6 +235,9 @@ func (persistence *Persistence) Update() ([]string, error) {
 	rows := make(CompiledRows, 0, 10)
 	if err := json.Unmarshal(d, &rows); err != nil {
 		return nil, err
+	}
+	for i, r := range rows {
+		rows[i].sshoptions, _ = sshkey.ParseOptions(r.Options)
 	}
 	return persistence.store(rows, make([]string, 0, 10))
 }
