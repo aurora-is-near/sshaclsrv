@@ -34,8 +34,32 @@ type Persistence struct {
 	PerHostDir     string // http(s)://<fqdn/path>/server/<hostname>
 	KeyFile        string // File containing delegation key and private key
 
+	AuthTime LastAuthTime
+
 	privateKey   ed25519.PrivateKey
 	delegatedKey delegatesign.DelegatedKey
+}
+
+// LastAuthTime can be used to look up the user's last authentication moment to determine expiration times.
+type LastAuthTime interface {
+	FromTime(user UserName) time.Time
+}
+
+type nowTime struct{}
+
+func (nt nowTime) FromTime(user UserName) time.Time {
+	_ = user
+	return time.Now()
+}
+
+func (persistence *Persistence) initSign() error {
+	if err := persistence.getKey(); err != nil {
+		return err
+	}
+	if persistence.AuthTime == nil {
+		persistence.AuthTime = new(nowTime)
+	}
+	return nil
 }
 
 func (persistence *Persistence) dirValid() error {
@@ -147,7 +171,7 @@ func (persistence *Persistence) store(rows CompiledRows, warnings []string) ([]s
 }
 
 func (persistence *Persistence) genLines(rows CompiledRows) ([]string, fileData, error) {
-	if err := persistence.getKey(); err != nil {
+	if err := persistence.initSign(); err != nil {
 		return nil, nil, err
 	}
 	lines := make(fileData)
@@ -166,10 +190,14 @@ func (persistence *Persistence) genLines(rows CompiledRows) ([]string, fileData,
 				warnings = append(warnings, fmt.Sprintf("User '%s' has no keys.", user))
 				continue KeyRowLoop
 			}
+		SingleKeyLoop:
 			for _, key := range keys {
 				serverPath, userPath := persistence.genPaths(accessRow, key.Fingerprint)
-				tl := TimeList{time.Now().Add(accessRow.Expire), key.NotAfter}
+				tl := TimeList{persistence.AuthTime.FromTime(user).Add(accessRow.Expire), key.NotAfter}
 				sort.Sort(tl)
+				if tl[0].Before(time.Now()) {
+					continue SingleKeyLoop
+				}
 				f := []string{string(accessRow.Server), string(accessRow.SystemUser), key.Fingerprint, sshkey.ExpireTimeToString(tl[0]), key.ApplyToString(accessRow.sshoptions)}
 				preLine := strings.Join(f, ":")
 				sig := persistence.delegatedKey.Sign(persistence.privateKey, []byte(preLine))

@@ -50,6 +50,7 @@ func TestPersistence_CompileAll(t *testing.T) {
 		t.Errorf("Write key: %s", err)
 	}
 	defer func() { _ = os.RemoveAll(dir) }()
+	// fmt.Println(dir)
 	pers := Persistence{
 		ModelFile:      modelFile,
 		ModelCacheFile: modelCache,

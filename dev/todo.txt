@@ -3,7 +3,8 @@
 - [x] Verify that keyfile is only root/sshacl writeable.
 - [x] Standalone signer bin (gen keypair, create delegation)
 - [x] Policy creation to filesystem hierarchy.
+- [x] Interface for last-auth support.
 - [ ] Keyfile update mode
     - [ ] Fetch full file and store filtered.
     - [ ] Sane replace.
-- [ ] Policy server casbin
+- [ ] Policy server casbin. (On demand)
