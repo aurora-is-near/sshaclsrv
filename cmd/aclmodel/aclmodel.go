@@ -13,13 +13,10 @@ import (
 
 // Config contains the configuration necessary for operation.
 var Config = &model.Persistence{
-	ModelFile:      "/path/to/model.cfg",
-	ModelCacheFile: "/path/to/model.cache",
-	UserDir:        "/path/to/userdir",
-	BaseDir:        "/path/to/basedir",
-	PerKeyDir:      "/path/to/basedir/perkey/",
-	PerHostDir:     "/path/to/basedir/perhost/",
-	KeyFile:        "/path/to/signKeyfile",
+	ModelFile: "/path/to/model.cfg",
+	UserDir:   "/path/to/userdir",
+	BaseDir:   "/path/to/basedir",
+	KeyFile:   "/path/to/signKeyfile",
 }
 
 const (

@@ -38,11 +38,8 @@ func TestPersistence_CompileAll(t *testing.T) {
 		t.Fatalf("UserDir: %s", err)
 	}
 	modelFile := path.Join(dir, "model.cfg")
-	modelCache := path.Join(dir, "model.cache")
 	keyFile := path.Join(dir, "delegate.key")
 	baseDir := path.Join(dir, "public")
-	keyDir := path.Join(baseDir, "key")
-	hostDir := path.Join(baseDir, "host")
 	if err := ioutil.WriteFile(modelFile, []byte(data), 0400); err != nil {
 		t.Errorf("Write mode: %s", err)
 	}
@@ -52,13 +49,10 @@ func TestPersistence_CompileAll(t *testing.T) {
 	defer func() { _ = os.RemoveAll(dir) }()
 	// fmt.Println(dir)
 	pers := Persistence{
-		ModelFile:      modelFile,
-		ModelCacheFile: modelCache,
-		UserDir:        userDir,
-		BaseDir:        baseDir,
-		KeyFile:        keyFile,
-		PerKeyDir:      keyDir,
-		PerHostDir:     hostDir,
+		ModelFile: modelFile,
+		UserDir:   userDir,
+		BaseDir:   baseDir,
+		KeyFile:   keyFile,
 	}
 	if warnings, err := pers.CompileAndStore(); err != nil {
 		t.Fatalf("CompileAndStore: %s", err)
