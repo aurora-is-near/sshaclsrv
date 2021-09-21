@@ -1,6 +1,7 @@
 package sshkey
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -58,6 +59,18 @@ type Key struct {
 	Fingerprint string
 }
 
+// ApplyToString applies opts to a key and returns the authorized-key formatted result.
+func (key Key) ApplyToString(opts Options) string {
+	s := make([]string, 0, 2)
+	if t := opts.Apply(key.Options).String(); len(t) > 0 {
+		s = append(s, t)
+	}
+	if t := string(bytes.TrimRight(ssh.MarshalAuthorizedKey(key.Key), "\n")); len(t) > 0 {
+		s = append(s, t)
+	}
+	return strings.Join(s, " ")
+}
+
 // ParseKey parses an authorized-key formatted key.
 func ParseKey(s string) (key *Key, err error) {
 	key = new(Key)
@@ -110,18 +123,19 @@ func ParseOptions(s string) (options Options, err error) {
 	options = make(Options, 0, 10)
 	q := trimRunesLeft([]rune(s), unicode.IsSpace)
 	for {
-		rem, optKey, optVal, optQuoted, err := parseOption(q)
-		if err != nil {
-			if err == ErrNoKey {
+		rem, optKey, optVal, optQuoted, pErr := parseOption(q)
+		if pErr == nil || pErr == ErrNoKey {
+			if len(optKey) > 0 {
+				optValI, err := verifyOption(optKey, optVal, optQuoted)
+				if err != nil {
+					return options, err
+				}
+				options = append(options, Option{Key: optKey, Value: optValI})
+			}
+			if pErr == ErrNoKey {
 				return options, nil
 			}
-			return options, err
 		}
-		optValI, err := verifyOption(optKey, optVal, optQuoted)
-		if err != nil {
-			return options, err
-		}
-		options = append(options, Option{Key: optKey, Value: optValI})
 		q = trimRunesLeft(rem, unicode.IsSpace)
 	}
 }

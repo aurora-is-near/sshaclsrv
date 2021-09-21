@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/aurora-is-near/sshaclsrv/src/sshkey"
 )
 
 // ConfigRow contains one access description.
@@ -13,11 +15,41 @@ type ConfigRow struct {
 	// User is the organization user/person with access.
 	User UserName
 	// SystemUser is the user on the system.
-	SystemUser string
+	SystemUser SystemUserName
 	// Expire enforces expiration of authenticated keys.
 	Expire time.Duration
 	// Options are ssh-authorized-keys options to apply.
-	Options string
+	Options    string
+	sshoptions sshkey.Options
+}
+
+// CompiledRows contains the compiled model.
+type CompiledRows []*ConfigRow
+
+func (rows CompiledRows) split() (byUser map[UserName]CompiledRows, byServer map[ServerName]CompiledRows) {
+	byUser, byServer = make(map[UserName]CompiledRows), make(map[ServerName]CompiledRows)
+	for _, row := range rows {
+		if row.Push {
+			if e, ok := byServer[row.Server]; ok {
+				e = append(e, row)
+				byServer[row.Server] = e
+			} else {
+				e := make(CompiledRows, 1, 10)
+				e[0] = row
+				byServer[row.Server] = e
+			}
+		}
+		if e, ok := byUser[row.User]; ok {
+			e = append(e, row)
+			byUser[row.User] = e
+		} else {
+			e := make(CompiledRows, 1, 10)
+			e[0] = row
+			byUser[row.User] = e
+		}
+
+	}
+	return byUser, byServer
 }
 
 func minExpire(a, b time.Duration) time.Duration {
@@ -41,12 +73,12 @@ func minExpireNoZero(a, b time.Duration) time.Duration {
 	return noZeroExpire(a, b)
 }
 
-func (acl *SystemACL) toRows() (warnings []string, rows []*ConfigRow, err error) {
+func (acl *SystemACL) toRows() (warnings []string, rows CompiledRows, err error) {
 	if err := acl.validate(); err != nil {
 		return nil, nil, err
 	}
 	warnings = acl.warnings()
-	configs := make([]*ConfigRow, 0, 10)
+	configs := make(CompiledRows, 0, 10)
 UserLoop:
 	for _, user := range acl.Users {
 		if !user.NotAfter.IsZero() && user.NotAfter.Before(time.Now()) {
@@ -67,6 +99,7 @@ UserLoop:
 											User:       user.name,
 											Expire:     minExpireNoZero(actionDetail.Expire, user.Expire),
 											Options:    actionDetail.Options,
+											sshoptions: actionDetail.sshoptions,
 										})
 									}
 								}

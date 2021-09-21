@@ -13,6 +13,14 @@ const (
 	sshKeyExpireFormatISO      = "2006-01-02 15:04:05"
 )
 
+// ExpireTimeToString returns the formatted expiry-time or an empty string if expiry is zero.
+func ExpireTimeToString(expireTime time.Time) string {
+	if expireTime.IsZero() {
+		return ""
+	}
+	return expireTime.Format(sshKeyExpireFormatTimeLong)
+}
+
 func parseExpireTime(expireString string) (time.Time, error) {
 	switch len(expireString) {
 	case len(sshKeyExpireFormatShort):

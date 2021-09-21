@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/aurora-is-near/sshaclsrv/src/util"
+
 	"github.com/aurora-is-near/sshaclsrv/src/delegatesign"
 )
 
@@ -32,7 +34,7 @@ func Delegate(params ...string) {
 	var privateKey ed25519.PrivateKey
 	var publicKey ed25519.PublicKey
 	dur, privkeyFile, delegateKeyFile := delegateParseParams(params...)
-	l, err := ReadFile(privkeyFile)
+	l, err := util.ReadFile(privkeyFile)
 	if err != nil || len(l) != 1 || len(l[0]) != 64 {
 		Error("Cannot read private key %s: %s\n", privkeyFile, err)
 	}

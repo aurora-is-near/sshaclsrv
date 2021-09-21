@@ -12,5 +12,5 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Errorf("Parse: %s", err)
 	}
-	spew.Dump(key.Fingerprint, key.NotAfter)
+	spew.Dump(key.Options, key.NotAfter)
 }

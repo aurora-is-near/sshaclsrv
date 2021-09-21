@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -19,6 +20,7 @@ Actions:
     User: mysql
     Expire: 3d
     Push: true
+    Options: no-pty
   Mail Admin:
     User: postmaster
     Expire: 3d
@@ -28,10 +30,17 @@ Roles:
     "*.node.com":
       - Database Admin
       - Mail Admin
+  Database Admin:
+    "alpha.node.com":
+      - Database Admin
 Users:
   Johann:
     Expire: 1Y
     Roles: [MasterAdmin]
+  Kyrill:
+    Expire: 1Y
+    Roles: [Database Admin]
+
 `
 
 func TestYAML(t *testing.T) {
@@ -45,8 +54,9 @@ func TestYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error compile: %s", err)
 	}
-	spew.Dump(warnings)
-	spew.Dump(rows)
+	_ = warnings
+	_ = rows
+	spew.Dump(rows.split())
 }
 
 // ToDo:
@@ -60,3 +70,5 @@ func TestYAML(t *testing.T) {
 //  - Sign keylines.
 //  - Distribute keylines over directory structure.
 //    - Remove non-present entries.
+
+// Model ->
