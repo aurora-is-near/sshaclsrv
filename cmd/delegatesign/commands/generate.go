@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base32"
+	"encoding/base64"
 	"fmt"
 	"os"
 )
@@ -20,7 +21,7 @@ func Generate(params ...string) {
 	if publicKey, privateKey, err = ed25519.GenerateKey(rand.Reader); err != nil {
 		Error("Cannot generate key: %s\n", err)
 	}
-	pub := base32.StdEncoding.EncodeToString(publicKey)
+	pub := base64.StdEncoding.EncodeToString(publicKey)
 	pks := base32.StdEncoding.EncodeToString(privateKey)
 	if err := WriteFile(params[0], "# Private Key %s\n%s\n", identity(), pks); err != nil {
 		Error("Cannot write key to file %s: %s\n", params[0], err)

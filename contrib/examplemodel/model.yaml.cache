@@ -1,0 +1,34 @@
+[
+  {
+    "Push": true,
+    "Server": "alpha.node.com",
+    "User": "Kyrill",
+    "SystemUser": "mysql",
+    "Expire": 259200000000000,
+    "Options": "no-pty"
+  },
+  {
+    "Push": true,
+    "Server": "alpha.node.com",
+    "User": "Johann",
+    "SystemUser": "mysql",
+    "Expire": 259200000000000,
+    "Options": "no-pty"
+  },
+  {
+    "Push": true,
+    "Server": "beta.node.com",
+    "User": "Johann",
+    "SystemUser": "mysql",
+    "Expire": 259200000000000,
+    "Options": "no-pty"
+  },
+  {
+    "Push": true,
+    "Server": "beta.node.com",
+    "User": "Johann",
+    "SystemUser": "postmaster",
+    "Expire": 259200000000000,
+    "Options": ""
+  }
+]

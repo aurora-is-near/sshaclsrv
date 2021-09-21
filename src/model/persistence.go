@@ -33,7 +33,7 @@ type Persistence struct {
 	UserDir   string // Directory containing one file per user which in turn contains one ssh-key per line.
 	BaseDir   string // Directory in which to write publicly accessible output.
 
-	AuthTime LastAuthTime
+	AuthTime LastAuthTime `json:"-"`
 
 	perKeyDir      string // http(s)://<fqdn/path>/key/<sshfingerprint>/<hostname>/<systemuser>
 	perHostDir     string // http(s)://<fqdn/path>/server/<hostname>

@@ -55,7 +55,7 @@ func readConfig(filename string) error {
 }
 
 func init() {
-	flag.StringVar(&configFile, "c", "/etc/sshd/sshacl.cfg", "path to configuration file")
+	flag.StringVar(&configFile, "c", "/etc/ssh/sshacl.cfg", "path to configuration file")
 	flag.StringVar(&username, "u", "", "username")
 	flag.StringVar(&fingerprint, "f", "", "fingerprint")
 	flag.BoolVar(&generate, "g", false, "generate example config")

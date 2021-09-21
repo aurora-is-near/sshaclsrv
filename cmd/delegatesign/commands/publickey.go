@@ -3,7 +3,7 @@ package commands
 import (
 	"bytes"
 	"crypto/ed25519"
-	"encoding/base32"
+	"encoding/base64"
 	"fmt"
 	"os"
 
@@ -26,7 +26,7 @@ func PublicKey(params ...string) {
 	case 1:
 		privkey := ed25519.PrivateKey(l[0])
 		pubkey := privkey.Public().(ed25519.PublicKey)
-		Output("# Public key\n%s\n", base32.StdEncoding.EncodeToString(pubkey))
+		Output("# Public key\n%s\n", base64.StdEncoding.EncodeToString(pubkey))
 	case 2:
 		privkey := ed25519.PrivateKey(l[0])
 		pubkey := privkey.Public().(ed25519.PublicKey)
@@ -39,9 +39,9 @@ func PublicKey(params ...string) {
 			Error("Cannot read key %s: Corrupt delegation\n", params[0])
 		}
 		Output("# Public key\n%s\n# Delegated until '%s' to:\n%s\n",
-			base32.StdEncoding.EncodeToString(pubkey),
+			base64.StdEncoding.EncodeToString(pubkey),
 			formatTime(until),
-			base32.StdEncoding.EncodeToString(master))
+			base64.StdEncoding.EncodeToString(master))
 	default:
 		Error("Cannot read key %s: Unknown format\n", params[0])
 	}
