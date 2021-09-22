@@ -1,0 +1,32 @@
+Servers:
+  alpha.node.com:
+    - Database Admin
+  beta.node.com:
+    - Database Admin
+    - Mail Admin
+Actions:
+  Database Admin:
+    User: mysql
+    Expire: 3d
+    Push: true
+    Options: no-pty
+  Mail Admin:
+    User: postmaster
+    Expire: 3d
+    Push: true
+    Options: no-pty
+Roles:
+  MasterAdmin:
+    "*.node.com":
+      - Database Admin
+      - Mail Admin
+  Database Admin:
+    "alpha.node.com":
+      - Database Admin
+Users:
+  Johann:
+    Expire: 1Y
+    Roles: [MasterAdmin]
+  Kyrill:
+    Expire: 1Y
+    Roles: [Database Admin]

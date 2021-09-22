@@ -12,6 +12,19 @@ import (
 	"github.com/aurora-is-near/sshaclsrv/src/delegatesign"
 )
 
+// WriteFile writes i... to filename using format. Files are readonly and will not overwrite.
+func WriteFile(filename, format string, i ...interface{}) error {
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0400)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	if _, err := fmt.Fprintf(f, format, i...); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ReadFile reads contents from filename, skipping comments and decoding remaining lines with base32.
 func ReadFile(filename string) (lines [][]byte, err error) {
 	ret := make([][]byte, 0, 3)

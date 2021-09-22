@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/json"
@@ -8,9 +9,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
+
+	"github.com/aurora-is-near/sshaclsrv/src/util"
 
 	"github.com/aurora-is-near/sshaclsrv/src/fileperm"
-
 	"github.com/aurora-is-near/sshaclsrv/src/gosshacl"
 )
 
@@ -36,6 +39,7 @@ var (
 	username    string
 	fingerprint string
 	generate    bool
+	fetch       bool
 )
 
 func readConfig(filename string) error {
@@ -55,26 +59,59 @@ func readConfig(filename string) error {
 }
 
 func init() {
-	flag.StringVar(&configFile, "c", "/etc/sshd/sshacl.cfg", "path to configuration file")
+	flag.StringVar(&configFile, "c", "/etc/ssh/sshacl.cfg", "path to configuration file")
 	flag.StringVar(&username, "u", "", "username")
 	flag.StringVar(&fingerprint, "f", "", "fingerprint")
 	flag.BoolVar(&generate, "g", false, "generate example config")
+	flag.BoolVar(&fetch, "fetch", false, "fetch keyfile")
 }
 
 func main() {
 	flag.Parse()
+	if generate && fetch {
+		_, _ = fmt.Fprintf(os.Stderr, "%s can't use -g(enerate) and -fetch at the same time.\n", os.Args[0])
+		os.Exit(1)
+	}
 	if generate {
 		d, _ := json.MarshalIndent(config, "  ", "")
 		_, _ = os.Stdout.Write(d)
 		_, _ = os.Stdout.Write([]byte("\n"))
 		os.Exit(0)
 	}
-	if username == "" || fingerprint == "" || configFile == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "%s -u <username> -f <fingerprint>\n", os.Args[0])
-		os.Exit(1)
-	}
 	if err := readConfig(configFile); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error reading configfile: %s\n", err)
+		os.Exit(1)
+	}
+	if fetch {
+		if config.URL != "" && len(config.PublicKey) >= ed25519.PublicKeySize {
+			dlFile := fmt.Sprintf("%s.dl-%d", config.KeyFile, time.Now().Unix())
+			buf := new(bytes.Buffer)
+			remote := gosshacl.NewRemote(config.URL, config.PublicKey, config.Token, config.Hostname)
+			if err := remote.Fetch(buf); err != nil {
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				os.Exit(2)
+			}
+			if err := util.WriteFile(dlFile, "%s\n", buf.String()); err != nil {
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				os.Exit(2)
+			}
+			defer func() { _ = os.Remove(dlFile) }()
+			if err := os.Chmod(dlFile, 0600); err != nil {
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				os.Exit(2)
+			}
+			if err := os.Rename(dlFile, config.KeyFile); err != nil {
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				os.Exit(2)
+			}
+			os.Exit(0)
+		} else {
+			_, _ = fmt.Fprintf(os.Stderr, "%s missing URL or verification key.\n", os.Args[0])
+			os.Exit(1)
+		}
+	}
+	if username == "" || fingerprint == "" || configFile == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "%s -u <username> -f <fingerprint>\n", os.Args[0])
 		os.Exit(1)
 	}
 	if config.Hostname == "" {

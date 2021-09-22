@@ -19,7 +19,8 @@ type ConfigRow struct {
 	// Expire enforces expiration of authenticated keys.
 	Expire time.Duration
 	// Options are ssh-authorized-keys options to apply.
-	Options    string
+	Options string
+
 	sshoptions sshkey.Options
 }
 

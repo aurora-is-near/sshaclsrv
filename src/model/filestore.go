@@ -7,7 +7,7 @@ import (
 )
 
 func (persistence *Persistence) genPaths(row *ConfigRow, keyFingerprint string) (server, user string) {
-	return path.Clean(path.Join(persistence.PerHostDir, string(row.Server))), path.Clean(path.Join(persistence.PerKeyDir, keyFingerprint, string(row.Server), string(row.SystemUser)))
+	return path.Clean(path.Join(persistence.perHostDir, string(row.Server))), path.Clean(path.Join(persistence.perKeyDir, keyFingerprint, string(row.Server), string(row.SystemUser)))
 }
 
 type fileData map[string][]string

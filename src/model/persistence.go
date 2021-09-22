@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aurora-is-near/sshaclsrv/src/constants"
+
 	"github.com/aurora-is-near/sshaclsrv/src/util"
 
 	"github.com/aurora-is-near/sshaclsrv/src/delegatesign"
@@ -26,22 +28,50 @@ import (
 
 // Persistence is the model persistence layer.
 type Persistence struct {
-	ModelFile      string // File containing the model.
-	ModelCacheFile string // File to cache the compiled model to.
-	UserDir        string // Directory containing one file per user which in turn contains one ssh-key per line.
-	BaseDir        string // Directory containing PerKeyDir and PerHostDir
-	PerKeyDir      string // http(s)://<fqdn/path>/key/<sshfingerprint>/<hostname>/<systemuser>
-	PerHostDir     string // http(s)://<fqdn/path>/server/<hostname>
-	KeyFile        string // File containing delegation key and private key
+	ModelFile string // File containing the model.
+	KeyFile   string // File containing delegation key and private key.
+	UserDir   string // Directory containing one file per user which in turn contains one ssh-key per line.
+	BaseDir   string // Directory in which to write publicly accessible output.
+
+	AuthTime LastAuthTime `json:"-"`
+
+	perKeyDir      string // http(s)://<fqdn/path>/key/<sshfingerprint>/<hostname>/<systemuser>
+	perHostDir     string // http(s)://<fqdn/path>/server/<hostname>
+	modelCacheFile string // File to cache the compiled model to.
 
 	privateKey   ed25519.PrivateKey
 	delegatedKey delegatesign.DelegatedKey
 }
 
+// LastAuthTime can be used to look up the user's last authentication moment to determine expiration times.
+type LastAuthTime interface {
+	FromTime(user UserName) time.Time
+}
+
+type nowTime struct{}
+
+func (nt nowTime) FromTime(user UserName) time.Time {
+	_ = user
+	return time.Now()
+}
+
+func (persistence *Persistence) initSign() error {
+	if err := persistence.getKey(); err != nil {
+		return err
+	}
+	if persistence.AuthTime == nil {
+		persistence.AuthTime = new(nowTime)
+	}
+	persistence.modelCacheFile = persistence.ModelFile + ".cache"
+	persistence.perKeyDir = path.Join(persistence.BaseDir, constants.PerKeyPath)
+	persistence.perHostDir = path.Join(persistence.BaseDir, constants.PerHostPath)
+	return nil
+}
+
 func (persistence *Persistence) dirValid() error {
 	baseDir := path.Clean(persistence.BaseDir)
-	perKeyDir := path.Clean(persistence.PerKeyDir)
-	perHostDir := path.Clean(persistence.PerHostDir)
+	perKeyDir := path.Clean(persistence.perKeyDir)
+	perHostDir := path.Clean(persistence.perHostDir)
 	if !strings.HasPrefix(perKeyDir, baseDir) || !strings.HasPrefix(perHostDir, baseDir) {
 		return ErrBaseDir
 	}
@@ -109,6 +139,9 @@ ReadLoop:
 
 // CompileAndStore model and store to files.
 func (persistence *Persistence) CompileAndStore() ([]string, error) {
+	if err := persistence.initSign(); err != nil {
+		return nil, err
+	}
 	modelSrc := SystemACL{}
 	d, err := ioutil.ReadFile(persistence.ModelFile)
 	if err != nil {
@@ -124,7 +157,7 @@ func (persistence *Persistence) CompileAndStore() ([]string, error) {
 	if d, err = json.MarshalIndent(rows, "", "  "); err != nil {
 		return warnings, err
 	}
-	if err := writeFile(persistence.ModelCacheFile, d, 0600); err != nil {
+	if err := writeFile(persistence.modelCacheFile, d, 0600); err != nil {
 		return warnings, err
 	}
 	return persistence.store(rows, warnings)
@@ -140,16 +173,13 @@ func (persistence *Persistence) store(rows CompiledRows, warnings []string) ([]s
 	if err != nil {
 		return warnings, err
 	}
-	if err := keepfiles.cleanup(persistence.BaseDir, persistence.PerKeyDir, persistence.PerHostDir); err != nil {
+	if err := keepfiles.cleanup(persistence.BaseDir, persistence.perKeyDir, persistence.perHostDir); err != nil {
 		return warnings, err
 	}
 	return warnings, nil
 }
 
 func (persistence *Persistence) genLines(rows CompiledRows) ([]string, fileData, error) {
-	if err := persistence.getKey(); err != nil {
-		return nil, nil, err
-	}
 	lines := make(fileData)
 	keyCache := newKeyCache()
 	warnings := make([]string, 0, 10)
@@ -166,11 +196,16 @@ func (persistence *Persistence) genLines(rows CompiledRows) ([]string, fileData,
 				warnings = append(warnings, fmt.Sprintf("User '%s' has no keys.", user))
 				continue KeyRowLoop
 			}
+		SingleKeyLoop:
 			for _, key := range keys {
 				serverPath, userPath := persistence.genPaths(accessRow, key.Fingerprint)
-				tl := TimeList{time.Now().Add(accessRow.Expire), key.NotAfter}
+				tl := TimeList{persistence.AuthTime.FromTime(user).Add(accessRow.Expire), key.NotAfter}
 				sort.Sort(tl)
-				f := []string{string(accessRow.Server), string(accessRow.SystemUser), key.Fingerprint, sshkey.ExpireTimeToString(tl[0]), key.ApplyToString(accessRow.sshoptions)}
+				if tl[0].Before(time.Now()) {
+					continue SingleKeyLoop
+				}
+				sshkeyS := key.ApplyToString(accessRow.sshoptions)
+				f := []string{string(accessRow.Server), string(accessRow.SystemUser), key.Fingerprint, sshkey.ExpireTimeToString(tl[0]), sshkeyS}
 				preLine := strings.Join(f, ":")
 				sig := persistence.delegatedKey.Sign(persistence.privateKey, []byte(preLine))
 				signedLine := fmt.Sprintf("%s:%s", base64.StdEncoding.EncodeToString(sig), preLine)
@@ -190,13 +225,19 @@ func (persistence *Persistence) genLines(rows CompiledRows) ([]string, fileData,
 
 // Update keys only from compiled model.
 func (persistence *Persistence) Update() ([]string, error) {
-	d, err := ioutil.ReadFile(persistence.ModelCacheFile)
+	if err := persistence.initSign(); err != nil {
+		return nil, err
+	}
+	d, err := ioutil.ReadFile(persistence.modelCacheFile)
 	if err != nil {
 		return nil, err
 	}
 	rows := make(CompiledRows, 0, 10)
 	if err := json.Unmarshal(d, &rows); err != nil {
 		return nil, err
+	}
+	for i, r := range rows {
+		rows[i].sshoptions, _ = sshkey.ParseOptions(r.Options)
 	}
 	return persistence.store(rows, make([]string, 0, 10))
 }
