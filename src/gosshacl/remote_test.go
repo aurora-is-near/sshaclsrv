@@ -77,7 +77,7 @@ func TestRemote(t *testing.T) {
 	time.Sleep(time.Second / 2)
 	remote := NewRemote("http://127.0.0.1:9100", masterPub, "", "localhost")
 	w := new(bytes.Buffer)
-	if err := remote.FindEntry(w, "root", tkhc); err != nil {
+	if err := remote.FindEntry(w, "root", tkh); err != nil {
 		t.Fatalf("FindEntry: %s", err)
 	}
 	if strings.TrimSpace(w.String()) != ok {
