@@ -95,6 +95,7 @@ func getURL(c *http.Client, url, hostname, token string) (*http.Response, error)
 
 // FindEntry calls the remote backend to find matching keys and writes them to w.
 func (remote *RemoteACL) FindEntry(w io.Writer, username, fingerprint string) error {
+	fingerprint = splitKey(fingerprint)
 	url := strings.Join([]string{remote.URL, constants.PerKeyPath, fingerprint, remote.Hostname, username}, "/")
 	resp, err := getURL(httpclient(0), url, remote.Hostname, remote.Token)
 	if err != nil {
